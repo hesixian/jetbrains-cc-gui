@@ -856,7 +856,9 @@
       "test": "测试连接",
       "testing": "测试中...",
       "testOk": "连接成功（HTTP {{status}}）",
-      "testFail": "失败：{{error}}"
+      "testFail": "失败：{{error}}",
+      "fimUnsupported": "该模型不支持 FIM 补全。可用的模型：{{models}}。重新选择上方「平台」会自动填入一个可用模型。",
+      "fimUnsupportedCustom": "该模型不支持 FIM 补全。请改用该平台支持 FIM（接受 suffix）的模型，或把「平台」切到上面列出的预置项。"
     },
     "agents": "Agents",
     "agentsDesc": "管理和配置AI代理",

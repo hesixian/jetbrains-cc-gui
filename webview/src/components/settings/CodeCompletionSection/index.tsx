@@ -40,6 +40,12 @@ interface Preset {
  * SiliconFlow /v1/completions both return a real FIM fragment for the models
  * listed below. Platforms without a completions endpoint (Ark, MiniMax, Kimi,
  * GLM, Claude, OpenCode Zen) are deliberately absent.
+ *
+ * Only models that answered a real `prompt` + `suffix` call with 200 and a
+ * usable middle fragment may be listed — a model being *offered* by the
+ * gateway says nothing about FIM support, and the gateway rejects the rest at
+ * request time with `400 20031 FIM is not supported for this model` (see the
+ * 2026-09-18 probe in docs/plans/2026-09-18-code-completion-fim-models.md).
  */
 export const PRESETS: Preset[] = [
   {
@@ -55,10 +61,10 @@ export const PRESETS: Preset[] = [
     baseUrl: 'https://api.siliconflow.cn',
     path: '/v1/completions',
     models: [
-      'deepseek-ai/DeepSeek-V4-Flash',
-      'deepseek-ai/DeepSeek-V3.2',
       'deepseek-ai/DeepSeek-V3',
       'Qwen/Qwen3-Coder-30B-A3B-Instruct',
+      'Pro/deepseek-ai/DeepSeek-V3',
+      'deepseek-ai/DeepSeek-R1',
     ],
   },
   { id: 'custom', label: 'Custom', baseUrl: '', path: '/v1/completions', models: [] },
@@ -97,6 +103,19 @@ function toBoolean(value: unknown, fallback: boolean): boolean {
   if (value === 'true') return true;
   if (value === 'false') return false;
   return fallback;
+}
+
+/**
+ * Gateway errors that mean "this model cannot do FIM" rather than "your
+ * configuration is wrong": SiliconFlow answers `20031 FIM is not supported for
+ * this model`, and `20015 suffix is not allowed` when a model refuses the
+ * suffix half of FIM. Both are indistinguishable from a broken setup in the
+ * raw body, so they get their own explanation.
+ */
+const FIM_UNSUPPORTED_ERROR = /20031|FIM is not supported|suffix is not allowed/i;
+
+function isFimUnsupported(error: unknown): boolean {
+  return typeof error === 'string' && FIM_UNSUPPORTED_ERROR.test(error);
 }
 
 function toConfig(json: string): { config: CodeCompletionConfig; resolvedFrom: string } {
@@ -370,6 +389,13 @@ const CodeCompletionSection = () => {
           </div>
           {testResult.endpoint && <div className={styles.hint}>{testResult.endpoint}</div>}
           {testResult.snippet && <pre className={styles.snippet}>{testResult.snippet}</pre>}
+          {!testResult.ok && isFimUnsupported(testResult.error) && (
+            <div className={styles.hint} data-testid="code-completion-fim-hint">
+              {presetModels.length > 0
+                ? t('settings.codeCompletion.fimUnsupported', { models: presetModels.join(', ') })
+                : t('settings.codeCompletion.fimUnsupportedCustom')}
+            </div>
+          )}
         </div>
       )}
     </div>

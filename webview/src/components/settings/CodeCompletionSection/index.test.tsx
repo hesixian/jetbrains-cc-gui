@@ -56,6 +56,19 @@ describe('CodeCompletionSection', () => {
     expect((screen.getByLabelText('Endpoint path') as HTMLInputElement).value).toBe('/v1/completions');
   });
 
+  // Regression: SiliconFlow advertises models it will not run FIM on, so the
+  // preset used to auto-fill `deepseek-ai/DeepSeek-V4-Flash` and every probe
+  // (and every editor completion) came back `400 20031 FIM is not supported`.
+  it('fills a model the gateway actually accepts for FIM', () => {
+    render(<CodeCompletionSection />);
+    act(() => window.updateCodeCompletionSettings?.(JSON.stringify(persisted)));
+
+    fireEvent.change(screen.getByLabelText('Preset'), { target: { value: 'siliconflow' } });
+    const model = (screen.getByLabelText('Model') as HTMLInputElement).value;
+    expect(model).toBe('deepseek-ai/DeepSeek-V3');
+    expect(model).not.toContain('V4-Flash');
+  });
+
   it('shows the returned snippet on a successful test', () => {
     render(<CodeCompletionSection />);
     act(() => window.updateCodeCompletionSettings?.(JSON.stringify(persisted)));
@@ -127,6 +140,31 @@ describe('CodeCompletionSection', () => {
       )
     );
     expect(screen.getByTestId('code-completion-test-result').textContent).toContain('HTTP 404');
+    expect(screen.queryByTestId('code-completion-fim-hint')).toBeNull();
+  });
+
+  // The raw body ("code":20031) is the only thing the gateway returns, and it
+  // reads like a config error; the hint is what turns it into a fix.
+  it('explains a "model does not support FIM" failure with usable models', () => {
+    render(<CodeCompletionSection />);
+    act(() => window.updateCodeCompletionSettings?.(JSON.stringify(persisted)));
+
+    fireEvent.change(screen.getByLabelText('Preset'), { target: { value: 'siliconflow' } });
+    act(() =>
+      window.onCodeCompletionTestResult?.(
+        JSON.stringify({
+          ok: false,
+          httpStatus: 400,
+          error: 'HTTP 400: {"code":20031,"message":"FIM is not supported for this model.","data":null}',
+          endpoint: 'https://api.siliconflow.cn/v1/completions',
+        })
+      )
+    );
+
+    const hint = screen.getByTestId('code-completion-fim-hint').textContent ?? '';
+    expect(hint).toContain('settings.codeCompletion.fimUnsupported');
+    expect(hint).toContain('deepseek-ai/DeepSeek-V3');
+    expect(hint).not.toContain('V4-Flash');
   });
 
   it('saves preset and path in the payload', () => {

@@ -856,7 +856,9 @@
       "test": "Test connection",
       "testing": "Testing...",
       "testOk": "Success (HTTP {{status}})",
-      "testFail": "Failed: {{error}}"
+      "testFail": "Failed: {{error}}",
+      "fimUnsupported": "This model does not support FIM completion. Models that do: {{models}}. Re-picking the platform above fills in a working model.",
+      "fimUnsupportedCustom": "This model does not support FIM completion. Use a model on this platform that accepts a suffix, or switch the platform to a preset above."
     },
     "agents": "Agents",
     "agentsDesc": "Manage and configure AI agents",
