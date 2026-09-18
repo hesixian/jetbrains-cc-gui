@@ -26,7 +26,8 @@ v1 的编辑器内联补全已落地（`FimCompletionContributor` + `DeepSeekFim
 补充事实（影响配置与提示）：
 - Ark 的 Coding Plan key **只能**用于 `/api/coding`（Anthropic）与 `/api/coding/v3`（OpenAI 兼容）；在 `/api/v3` 上返回 `API key format is incorrect`。
 - DeepSeek 官方可用模型仅 `deepseek-flash`、`deepseek-v4-pro`（`GET /models` 实测）；`deepseek-v4-flash` 是 **Zen 的**模型 id，官方不存在。v1 的默认值是错的，本设计修正。
-- SiliconFlow `/v1/models` 实测 94 个模型；其中支持 FIM 的（带 `suffix`）包含 `deepseek-ai/DeepSeek-V3`、`deepseek-ai/DeepSeek-V3.2`、`deepseek-ai/DeepSeek-V4-Flash`、`Qwen/Qwen3-Coder-30B-A3B-Instruct` 等。
+- SiliconFlow `/v1/models` 实测 94 个模型。
+  > ⚠️ **2026-09-18 更正**：本节原先写「支持 FIM 的包含 `DeepSeek-V3`、`DeepSeek-V3.2`、`DeepSeek-V4-Flash`、`Qwen3-Coder-30B-A3B-Instruct`」，这一条是**错的**——模型广场里有 ≠ 支持 FIM。带 `suffix` 逐模型实测后，`DeepSeek-V3.2` / `DeepSeek-V4-Flash` 均返回 `400 20031 FIM is not supported for this model`。实测表与结论见 `2026-09-18-code-completion-fim-models.md`。
 
 ## 3. 范围
 
